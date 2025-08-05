@@ -1,0 +1,9 @@
+fun helloWorld() {
+    // Variables either dynamically or statically typed
+    var String: test = "I'm a string"
+    var foo = 12
+
+    var bar = foo + 10
+
+    print("Hello World " + bar)
+}
