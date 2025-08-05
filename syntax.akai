@@ -1,3 +1,20 @@
+class Position:
+    // Properties
+    var int: x
+    var int: y
+
+    // Constructor
+    Position(_x, _y) {
+        x = _x
+        y = _y
+    }
+
+// Inheritance
+class Cat derive Animal:
+    /*
+        code goes here
+    */
+
 fun helloWorld() {
     // Variables either dynamically or statically typed
     var String: test = "I'm a string"
@@ -7,3 +24,23 @@ fun helloWorld() {
 
     print("Hello World " + bar)
 }
+
+/*
+Keywords/ Tokens:
+    - class
+    - fun 
+    - var
+    - bool
+    - if
+    - else
+    - (
+    - )
+    - {
+    - }
+    - :
+    - +
+    - -
+    - /
+    - *
+    - =
+*/

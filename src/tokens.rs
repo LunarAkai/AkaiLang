@@ -2,7 +2,7 @@ use logos::{Lexer, Logos};
 
 #[derive(Logos, Debug, Clone, PartialEq)]
 #[logos(skip r"[ \t\r\n\f]+")] // Skips whitespace
-enum Token<'source> {
+pub enum Token<'source> {
     #[token("false", |_| false)]
     #[token("true", |_| true)]
     Bool(bool),
@@ -18,16 +18,40 @@ enum Token<'source> {
 
     #[token("/")]
     Divide,
+
+    #[token("=")]
+    Equals,
+
+    #[token(":")]
+    Colon,
+
+    #[token("(")]
+    ParenBegin,
+
+    #[token(")")]
+    ParenEnd,
+
+    #[token("{")]
+    BraceBegin,
+
+    #[token("}")]
+    BraceEnd,
+
+    #[regex("[0-9]+", |lex| lex.slice().parse::<isize>().unwrap())]
+    Integer(isize),
     
     #[regex(r"[_a-zA-Z][_0-9a-zA-Z]*")]
     Ident(&'source str),
 
     #[regex(r#""([^"\\\x00-\x1F]|\\(["\\bnfrt/]|u[a-fA-F0-9]{4}))*""#, |lex| lex.slice().to_owned())]
     String(String),
-}
 
-fn float<'a>(lex: &mut Lexer<'a, Token<'a>>) -> Result<f64, ()> {
-    lex.slice().parse().map_err(|_| ())
+    #[token("class")]
+    #[token("fun")]
+    #[token("var")]
+    #[token("if")]
+    #[token("else")]
+    Keyword(&'source str),
 }
 
 
