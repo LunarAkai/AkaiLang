@@ -1,12 +1,20 @@
 use chumsky::{combinator::Or, prelude::{choice, just, recursive}, recursive, select, text::{self, ascii::ident}, IterParser, Parser};
 
-use crate::{ast::Expression, tokens::Token};
+use crate::{ast::ast::Expression, tokens::Token};
 
 
 #[allow(clippy::let_and_return)]
-pub fn parser<'src>(
-) -> impl Parser<'src, &'src [Token<'src>], Expression<'src>, chumsky::extra::Err<chumsky::error::Simple<'src, Token<'src>>>>
-{
+pub fn parser<'src>() -> impl Parser<'src, &'src [Token<'src>], Expression<'src>> {
+    let ident = select! {
+        Token::Ident(ident) => ident
+    };
+
+       let keyword = |kw: &'static str| select! {
+        Token::Keyword(k) if k == kw => ()
+    };
+
+    let eq = just(Token::Equals);
+
     let expr = recursive(
         |expr| 
         {
@@ -53,5 +61,33 @@ pub fn parser<'src>(
         binary_2
     });
 
-    expr
+    let decl = recursive(|decl| {
+        let r#var = keyword("var")
+            .ignore_then(ident.clone()) 
+            .then_ignore(eq.clone())
+            .then(decl.clone())
+            .then(decl.clone())
+            .map(|((name, rhs), then)| Expression::Var {
+                name,
+                rhs: Box::new(rhs),
+                then: Box::new(then),
+            });
+
+        let r#fun = keyword("fun")
+            .ignore_then(ident.clone())
+            .then(ident.clone().repeated().collect())
+            .then_ignore(eq.clone())
+            .then(decl.clone())
+            .then(decl.clone())
+            .map(|(((name, args), body), then)| Expression::Function {
+                name,
+                args,
+                body: Box::new(body),
+                then: Box::new(then),
+        });
+        
+        var.or(r#fun).or(expr)
+    });
+
+    decl
 }

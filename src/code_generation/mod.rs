@@ -1,71 +1,76 @@
+use std::collections::HashMap;
+
+use inkwell::values::{BasicValueEnum, FunctionValue, PointerValue};
+
+use crate::ast::ast::Expression;
+
 pub mod compiler;
 
 // LLVM Codegen
 
+struct CodegenContext<'ctx> {
+    builder: inkwell::builder::Builder<'ctx>,
+    module: inkwell::module::Module<'ctx>,
+    context: &'ctx inkwell::context::Context,
+    variables: HashMap<String, PointerValue<'ctx>>,
+    functions: HashMap<String, FunctionValue<'ctx>>,
+}
 
-//--------------------------
-//  Parser
-//-------------------------
 
-use std::collections::HashMap;
+impl<'ctx, 'src> Expression<'src> {
+    fn codegen(&self, ctx: &mut CodegenContext<'ctx>) -> BasicValueEnum<'ctx> {
+        match self {
+            Expression::VariableName(name) => {
+                todo!()
+            },
 
-use logos::Lexer;
+            Expression::Integer(_) => {
+                todo!()
+            },
 
-use crate::tokens::Token;
+            Expression::Float(_) => {
+                todo!()
+            },
 
-/// Defines a primitive expression
-#[derive(Debug)]
-pub enum Expr {
-    Binary {
-        op: char,
-        left: Box<Expr>,
-        right: Box<Expr>,
-    },
-    Call {
-        fn_name: String,
-        args: Vec<Expr>,
-    },
-    Conditional {
-        cond: Box<Expr>,
-        consequence: Box<Expr>,
-        alternative: Box<Expr>,
-    },
-    For {
-        var_name: String,
-        start: Box<Expr>,
-        end: Box<Expr>,
-        step: Option<Box<Expr>>,
-        body: Box<Expr>,
-    },
-    Number(f64),
-    Variable(String),
-    VarIn {
-        variables: Vec<(String, Option<Expr>)>,
-        body: Box<Expr>,
+            Expression::String(_) => {
+                todo!()
+            },
+
+            Expression::Bool(_) => {
+                todo!()
+            },
+
+            Expression::Negatation(expression) => {
+                todo!()
+            },
+
+            Expression::Add(expression, expression1) => {
+                todo!()
+            },
+
+            Expression::Substract(expression, expression1) => {
+                todo!()
+            },
+
+            Expression::Multiply(expression, expression1) => {
+                todo!()
+            },
+
+            Expression::Divide(expression, expression1) => {
+                todo!()
+            },
+
+            Expression::Var { name, rhs, then } => {
+                todo!()
+            },
+
+            Expression::Function { name, args, body, then } => {
+                todo!()
+            },
+
+            Expression::Unit => {
+                todo!()
+            },
+        }
     }
-
-}
-
-
-/// Defines the prototype (name and parameters) of a function
-#[derive(Debug)]
-pub struct Prototype {
-    pub name: String,
-    pub args: Vec<String>,
-    pub is_op: bool,
-    pub prec: usize,
-}
-
-/// Defines a user-defined or external function
-#[derive(Debug)]
-pub struct Function {
-    pub prototype: Prototype,
-    pub body: Option<Expr>,
-    pub is_anon: bool,
-}
-
-pub struct Parser<'a> {
-    tokens: Vec<Token<'a>>,
-    pos: usize,
-    prec: &'a mut HashMap<char, i32>,
 }

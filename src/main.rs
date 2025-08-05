@@ -33,5 +33,5 @@ fn main() {
         }
     };
 
-    println!("\n[result]\n{}", ast.eval());
+    println!("\n[result]\n{}", ast.evaluate());
 }
