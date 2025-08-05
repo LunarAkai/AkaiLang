@@ -1,18 +1,17 @@
-use chumsky::{prelude::{just, recursive}, recursive, select, IterParser, Parser};
+use chumsky::{combinator::Or, prelude::{choice, just, recursive}, recursive, select, text::{self, ascii::ident}, IterParser, Parser};
 
 use crate::{ast::Expression, tokens::Token};
 
 
 #[allow(clippy::let_and_return)]
-/* ANCHOR: parser */
 pub fn parser<'src>(
-) -> impl Parser<'src, &'src [Token<'src>], Expression, chumsky::extra::Err<chumsky::error::Simple<'src, Token<'src>>>>
+) -> impl Parser<'src, &'src [Token<'src>], Expression<'src>, chumsky::extra::Err<chumsky::error::Simple<'src, Token<'src>>>>
 {
-    recursive(
-        |p| 
+    let expr = recursive(
+        |expr| 
         {
             let atom = {
-            let parenthesized = p
+            let parenthesized = expr
                 .clone()
                 .delimited_by(just(Token::ParenBegin), just(Token::ParenEnd));
 
@@ -25,7 +24,7 @@ pub fn parser<'src>(
 
         let unary = just(Token::Substract)
             .repeated()
-            .foldr(atom, |_op, rhs| Expression::Negate(Box::new(rhs)));
+            .foldr(atom, |_op, rhs| Expression::Negatation(Box::new(rhs)));
 
         let binary_1 = unary.clone().foldl(
             just(Token::Multiply)
@@ -52,5 +51,7 @@ pub fn parser<'src>(
         );
 
         binary_2
-    })
+    });
+
+    expr
 }

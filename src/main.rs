@@ -6,6 +6,7 @@ use crate::{parser::parser, tokens::Token};
 mod tokens;
 mod ast;
 mod parser;
+mod code_generation;
 
 fn main() {
     let lexer = Token::lexer("(1 + 1) * 3");

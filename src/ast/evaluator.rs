@@ -1,18 +1,33 @@
 use crate::ast::Expression;
 
 
-impl Expression {
-    pub fn eval(&self) -> isize {
+
+impl<'src> Expression<'src> {
+    pub fn eval(&self) -> String {
         match self {
-            Expression::Integer(n) => *n,
+            Expression::VariableName(_) => todo!(),
 
+            Expression::Integer(_) => todo!(),
+
+            Expression::Float(_) => todo!(),
+
+            Expression::String(_) => todo!(),
+
+            Expression::Bool(_) => todo!(),
+
+            Expression::Negatation(expression) => todo!(),
+
+            Expression::Add(expression, expression1) => todo!(),
+
+            Expression::Substract(expression, expression1) => todo!(),
+
+            Expression::Multiply(expression, expression1) => todo!(),
+
+            Expression::Divide(expression, expression1) => todo!(),
+
+            Expression::Var { name, rhs, then } => todo!(),
             
-            Expression::Negate(rhs) => -rhs.eval(),
-
-            Expression::Add(lhs, rhs) => lhs.eval() + rhs.eval(),
-            Expression::Substract(lhs, rhs) => lhs.eval() - rhs.eval(),
-            Expression::Multiply(lhs, rhs) => lhs.eval() * rhs.eval(),
-            Expression::Divide(lhs, rhs) => lhs.eval() / rhs.eval(),
+            Expression::Function { name, args, body, then } => todo!(),
         }
     }
 }
