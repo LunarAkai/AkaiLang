@@ -18,14 +18,14 @@ class Cat derive Animal:
 fun helloWorld() {
     // Variables either dynamically or statically typed
     var String: test = "I'm a string"
-    var foo = 12
+    var foo = 12        // reads as int
 
     var bar = foo + 10
 
     print("Hello World " + bar)
 }
 
-fun returnsInteger(int: i): int {
+fun returnsIntegerPlusOne(int: i): int {
     -> i + 1
 }
 

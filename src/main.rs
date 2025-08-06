@@ -1,12 +1,9 @@
 use chumsky::Parser;
 use logos::Logos;
 
-use crate::{parser::parser, tokens::Token};
+use crate::{language_frontend::parser::parser, language_frontend::tokens::Token};
 
-mod tokens;
 mod language_frontend;
-mod parser;
-mod llvm_backend;
 
 fn main() {
     let lexer = Token::lexer("(1 + 1) * 3");
