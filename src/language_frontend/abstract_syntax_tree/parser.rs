@@ -1,9 +1,5 @@
 use chumsky::{
-    IterParser, Parser,
-    combinator::Or,
-    prelude::{choice, just, recursive},
-    recursive, select,
-    text::{self, ascii::ident},
+    combinator::Or, prelude::{choice, just, recursive}, recursive, select, select_ref, text::{self, ascii::ident, whitespace}, IterParser, Parser
 };
 
 use crate::{language_frontend::abstract_syntax_tree::ast::Expression, language_frontend::lexer::tokens::Token};
@@ -12,8 +8,8 @@ use crate::{language_frontend::abstract_syntax_tree::ast::Expression, language_f
 
 #[allow(clippy::let_and_return)]
 pub fn parser<'src>() -> impl Parser<'src, &'src [Token<'src>], Expression<'src>> {
-    let ident = select! {
-        Token::Ident(ident) => ident
+    let ident = select_ref! {
+        Token::Ident(ident) => *ident
     };
 
     let keyword = |kw: &'static str| {
@@ -40,6 +36,8 @@ pub fn parser<'src>() -> impl Parser<'src, &'src [Token<'src>], Expression<'src>
         let unary = just(Token::Substract)
             .repeated()
             .foldr(atom, |_op, rhs| Expression::Negatation(Box::new(rhs)));
+
+        // "Punktrechnung vor Strichrechnung :nerd:"
 
         let binary_1 = unary.clone().foldl(
             just(Token::Multiply)
@@ -70,9 +68,9 @@ pub fn parser<'src>() -> impl Parser<'src, &'src [Token<'src>], Expression<'src>
 
     let decl = recursive(|decl| {
         let r#var = keyword("var")
-            .ignore_then(ident.clone())
+            .ignore_then(ident)
             .then_ignore(eq.clone())
-            .then(decl.clone())
+            .then(expr.clone())
             .then(decl.clone())
             .map(|((name, rhs), then)| Expression::Var {
                 name,
@@ -82,10 +80,10 @@ pub fn parser<'src>() -> impl Parser<'src, &'src [Token<'src>], Expression<'src>
 
         let r#fun = keyword("fun")
             .ignore_then(ident.clone())
-            .then(ident.clone().repeated().collect())
+            .then(ident.repeated().collect::<Vec<_>>())
             .then_ignore(eq.clone())
-            .then(decl.clone())
-            .then(decl.clone())
+            .then(expr.clone())
+            .then(decl)
             .map(|(((name, args), body), then)| Expression::Function {
                 name,
                 args,

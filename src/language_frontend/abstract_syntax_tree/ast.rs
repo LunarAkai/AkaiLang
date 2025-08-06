@@ -2,19 +2,23 @@
 
 #[derive(Debug)]
 pub enum Expression<'src> {
+    // Identifier
     Ident(&'src str),
 
+    // Types
     Integer(i64),
     Float(f64),
     String(String),
     Bool(bool),
 
+    // Operations
     Negatation(Box<Expression<'src>>),
     Add(Box<Expression<'src>>, Box<Expression<'src>>),
     Substract(Box<Expression<'src>>, Box<Expression<'src>>),
     Multiply(Box<Expression<'src>>, Box<Expression<'src>>),
     Divide(Box<Expression<'src>>, Box<Expression<'src>>),
 
+    // Keywords
     Var {
         name: &'src str,
         rhs: Box<Expression<'src>>,
@@ -37,16 +41,24 @@ pub fn eval<'src>(
     funcs: &mut Vec<(&'src str, &'src [&'src str], &'src Expression<'src>)>,
 ) -> Result<f64, String> {
     match expr {
-        Expression::Ident(_) => todo!(),
+        Expression::Ident(name) => {
+            if let Some((_, val)) = vars.iter().rev().find(|(var, _)| var == name) {
+                Ok(*val)
+            } else {
+                Err(format!("Cannot find variable `{name}` in scope"))
+            }
+        },
 
-        Expression::Integer(x) => Ok((*x) as f64),
+        // Types
+        Expression::Integer(x) => Ok((*x) as f64), // todo
 
-        Expression::Float(_) => todo!(),
+        Expression::Float(x) => Ok(*x),
 
         Expression::String(_) => todo!(),
 
         Expression::Bool(_) => todo!(),
 
+        // Operations
         Expression::Negatation(lhs) => todo!(),
 
         Expression::Add(lhs, rhs) => Ok(eval(lhs, vars, funcs)? + eval(rhs, vars, funcs)?),
@@ -57,14 +69,26 @@ pub fn eval<'src>(
 
         Expression::Divide(lhs, rhs) => Ok(eval(lhs, vars, funcs)? / eval(rhs, vars, funcs)?),
 
-        Expression::Var { name, rhs, then } => todo!(),
+        // Keywords
+        Expression::Var { name, rhs, then } => {
+            let rhs = eval(rhs, vars, funcs)?;
+            vars.push((*name, rhs));
+            let output = eval(then, vars, funcs);
+            vars.pop();
+            output
+        },
 
         Expression::Function {
             name,
             args,
             body,
             then,
-        } => todo!(),
+        } => {
+            funcs.push((name, args, body));
+            let output = eval(then, vars, funcs);
+            funcs.pop();
+            output
+        },
 
         Expression::Unit => todo!(),
     }

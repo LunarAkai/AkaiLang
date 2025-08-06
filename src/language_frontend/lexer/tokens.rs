@@ -37,8 +37,11 @@ pub enum Token<'src> {
     #[token("}")]
     BraceEnd,
 
-    #[regex("[0-9]+", |lex| lex.slice().parse::<i64>().unwrap())]
+    #[regex(r"[+-]?[0-9]+", |lex| lex.slice().parse::<i64>().unwrap(), priority = 3)]
     Integer(i64),
+
+    #[regex(r"[+-]?([0-9]*[.])?[0-9]+", |lex| lex.slice().parse::<f64>().unwrap())]
+    Float(f64),
 
     #[regex(r"[_a-zA-Z][_0-9a-zA-Z]*")]
     Ident(&'src str),

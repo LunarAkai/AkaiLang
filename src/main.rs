@@ -1,11 +1,11 @@
 use chumsky::Parser;
 use logos::Logos;
 
-use crate::language_frontend::abstract_syntax_tree;
 use crate::{
-    language_frontend::lexer::tokens::Token, language_frontend::parser::parser};
+    language_frontend::lexer::tokens::Token, language_frontend::abstract_syntax_tree::parser::parser};
 
 use crate::language_frontend::abstract_syntax_tree::ast::{eval, Expression};   
+
 mod language_frontend;
 
 /*
@@ -17,7 +17,8 @@ Simple Compiler -> 4 Stages:
 */
 
 fn main() {
-    let lexer = Token::lexer("1 + 1 * 3");
+    let sourcecode = std::fs::read_to_string("sample.akai").unwrap();
+    let lexer = Token::lexer(&sourcecode);
 
     let mut tokens = vec![];
     for (token, span) in lexer.spanned() {
@@ -29,19 +30,6 @@ fn main() {
             }
         }
     }
-
-    /* 
-    match parser().parse(&tokens).into_result() {
-        Ok(expr) => match eval(&ast, &mut Vec::new(), &mut Vec::new()) {
-            Ok(output) => println!("{output}"),
-            Err(eval_err) => println!("Evaluation error: {eval_err}"),
-        }
-        Err(e) => {
-            println!("parse error: {:#?}", e);
-            return;
-        }
-    }; */
-
 
     match parser().parse(&tokens).into_result() {
         Ok(ast) => match eval(&ast, &mut Vec::new(), &mut Vec::new()) {
