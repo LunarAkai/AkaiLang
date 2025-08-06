@@ -44,27 +44,54 @@ impl<'ctx, 'src> Expression<'src> {
                 todo!()
             },
 
-            Expression::Add(expression, expression1) => {
+            Expression::Add(
+                lhs, 
+                rhs
+            ) => {
+                let l = lhs.codegen(ctx).into_int_value();
+                let r = rhs.codegen(ctx).into_int_value();
+                ctx.builder.build_int_add(l, r, "addtmp").unwrap().into()
+            },
+
+            Expression::Substract(
+                lhs, 
+                rhs
+            ) => {
                 todo!()
             },
 
-            Expression::Substract(expression, expression1) => {
+            Expression::Multiply(
+                lhs, 
+                rhs
+            ) => {
                 todo!()
             },
 
-            Expression::Multiply(expression, expression1) => {
+            Expression::Divide(
+                lhs, 
+                rhs
+            ) => {
                 todo!()
             },
 
-            Expression::Divide(expression, expression1) => {
-                todo!()
+            Expression::Var { 
+                name, 
+                rhs, 
+                then 
+            } => {
+                let value = rhs.codegen(ctx);
+                let ptr = ctx.builder.build_alloca(ctx.context.f32_type(), name).unwrap();
+                let _ = ctx.builder.build_store(ptr, value);
+                ctx.variables.insert(name.to_string(), ptr);
+                then.codegen(ctx)
             },
 
-            Expression::Var { name, rhs, then } => {
-                todo!()
-            },
-
-            Expression::Function { name, args, body, then } => {
+            Expression::Function { 
+                name, 
+                args, 
+                body, 
+                then 
+            } => {
                 todo!()
             },
 

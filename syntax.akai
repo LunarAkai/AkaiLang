@@ -25,14 +25,29 @@ fun helloWorld() {
     print("Hello World " + bar)
 }
 
+fun returnsInteger(int: i): int {
+    -> i + 1
+}
+
 /*
 Keywords/ Tokens:
     - class
+    - interface
     - fun 
     - var
+
+    - derive    // Inheritance for classes
+    - impl      // for interfaces
+
+    // Standard keywords for basic stuff
+    - int
+    - float
+    - char
     - bool
     - if
     - else
+    - enum
+    
     - (
     - )
     - {

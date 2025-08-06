@@ -4,9 +4,9 @@ use logos::Logos;
 use crate::{parser::parser, tokens::Token};
 
 mod tokens;
-mod ast;
+mod language_frontend;
 mod parser;
-mod code_generation;
+mod llvm_backend;
 
 fn main() {
     let lexer = Token::lexer("(1 + 1) * 3");
