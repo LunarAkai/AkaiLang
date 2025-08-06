@@ -9,10 +9,10 @@ pub enum Op {
 impl Op {
     pub fn eval(&self) -> String {
         let text: &str = match self {
-           Op::Add => "+",
-           Op::Subtract => "-",
-           Op::Multiply => "*",
-           Op::Divide => "/",
+            Op::Add => "+",
+            Op::Subtract => "-",
+            Op::Multiply => "*",
+            Op::Divide => "/",
         };
         text.to_string()
     }

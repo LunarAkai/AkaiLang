@@ -1,7 +1,14 @@
-use chumsky::{combinator::Or, prelude::{choice, just, recursive}, recursive, select, text::{self, ascii::ident}, IterParser, Parser};
+use chumsky::{
+    IterParser, Parser,
+    combinator::Or,
+    prelude::{choice, just, recursive},
+    recursive, select,
+    text::{self, ascii::ident},
+};
 
-use crate::{language_frontend::ast::ast::Expression, language_frontend::tokens::Token};
+use crate::{language_frontend::abstract_syntax_tree::ast::Expression, language_frontend::lexer::tokens::Token};
 
+// goal of parsing is to construct an abstract syntax tree
 
 #[allow(clippy::let_and_return)]
 pub fn parser<'src>() -> impl Parser<'src, &'src [Token<'src>], Expression<'src>> {
@@ -9,16 +16,16 @@ pub fn parser<'src>() -> impl Parser<'src, &'src [Token<'src>], Expression<'src>
         Token::Ident(ident) => ident
     };
 
-       let keyword = |kw: &'static str| select! {
-        Token::Keyword(k) if k == kw => ()
+    let keyword = |kw: &'static str| {
+        select! {
+            Token::Keyword(k) if k == kw => ()
+        }
     };
 
     let eq = just(Token::Equals);
 
-    let expr = recursive(
-        |expr| 
-        {
-            let atom = {
+    let expr = recursive(|expr| {
+        let atom = {
             let parenthesized = expr
                 .clone()
                 .delimited_by(just(Token::ParenBegin), just(Token::ParenEnd));
@@ -63,7 +70,7 @@ pub fn parser<'src>() -> impl Parser<'src, &'src [Token<'src>], Expression<'src>
 
     let decl = recursive(|decl| {
         let r#var = keyword("var")
-            .ignore_then(ident.clone()) 
+            .ignore_then(ident.clone())
             .then_ignore(eq.clone())
             .then(decl.clone())
             .then(decl.clone())
@@ -84,8 +91,8 @@ pub fn parser<'src>() -> impl Parser<'src, &'src [Token<'src>], Expression<'src>
                 args,
                 body: Box::new(body),
                 then: Box::new(then),
-        });
-        
+            });
+
         var.or(r#fun).or(expr)
     });
 

@@ -17,6 +17,7 @@ class Cat derive Animal:
 
 fun helloWorld() {
     // Variables either dynamically or statically typed
+    // -> Type inference 
     var String: test = "I'm a string"
     var foo = 12        // reads as int
 

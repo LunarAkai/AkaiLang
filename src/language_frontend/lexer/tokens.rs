@@ -39,7 +39,7 @@ pub enum Token<'src> {
 
     #[regex("[0-9]+", |lex| lex.slice().parse::<i64>().unwrap())]
     Integer(i64),
-    
+
     #[regex(r"[_a-zA-Z][_0-9a-zA-Z]*")]
     Ident(&'src str),
 
@@ -53,5 +53,3 @@ pub enum Token<'src> {
     #[token("else")]
     Keyword(&'src str),
 }
-
-

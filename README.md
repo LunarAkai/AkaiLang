@@ -6,7 +6,7 @@ Akai Lang (yeah I'm not creative and the name is still unused on github, sooo) i
 
 ## Planned Features
 - Object-Oriented
-- dynamic typing
+- dynamic typing / Type inference
 - LLVM Backend
 
 ## Hello World
@@ -15,3 +15,6 @@ fun helloWorld() {
     print("Hello World!")
 }
 ```
+
+## Shoutout to these amazing ressources that help(ed) me understand language design:
+- [https://mukulrathi.com/create-your-own-programming-language/intro-to-compiler/](https://mukulrathi.com/create-your-own-programming-language/intro-to-compiler/)
