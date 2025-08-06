@@ -1,3 +1,5 @@
+use std::fmt;
+
 use logos::{Lexer, Logos};
 
 #[derive(Logos, Debug, Clone, PartialEq)]
@@ -55,4 +57,28 @@ pub enum Token<'src> {
     #[token("if")]
     #[token("else")]
     Keyword(&'src str),
+}
+
+
+impl fmt::Display for Token<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Token::Float(s) => write!(f, "{s}"),
+            Token::Add => write!(f, "+"),
+            Token::Bool(_) => write!(f, "+"),
+            Token::Substract => write!(f, "-"),
+            Token::Multiply => write!(f, "*"),
+            Token::Divide => write!(f, "/"),
+            Token::Equals => write!(f, "="),
+            Token::Colon => write!(f, ":"),
+            Token::ParenBegin => write!(f, "("),
+            Token::ParenEnd => write!(f, ")"),
+            Token::BraceBegin => write!(f, "{{"),
+            Token::BraceEnd => write!(f, "}}"),
+            Token::Integer(s) => write!(f, "{s}"),
+            Token::Ident(s) => write!(f, "{s}"),
+            Token::String(s) => write!(f, "{s}"),
+            Token::Keyword(s) => write!(f, "{s}"),
+        }
+    }
 }

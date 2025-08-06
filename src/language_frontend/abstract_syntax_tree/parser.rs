@@ -21,16 +21,9 @@ pub fn parser<'src>() -> impl Parser<'src, &'src [Token<'src>], Expression<'src>
     let eq = just(Token::Equals);
 
     let expr = recursive(|expr| {
-        let atom = {
-            let parenthesized = expr
-                .clone()
-                .delimited_by(just(Token::ParenBegin), just(Token::ParenEnd));
+        let atom = select! {
+            Token::Float(x) => Expression::Float(x),
 
-            let integer = select! {
-                Token::Integer(n) => Expression::Integer(n),
-            };
-
-            parenthesized.or(integer)
         };
 
         let unary = just(Token::Substract)
