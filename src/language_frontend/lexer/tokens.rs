@@ -3,7 +3,7 @@ use std::fmt;
 use logos::{Lexer, Logos};
 
 #[derive(Logos, Debug, Clone, PartialEq)]
-#[logos(skip r"[ \t\r\n\f]+")] // Skips whitespace
+#[logos(skip r"[ \t\r\n\f]+")] // Skip whitespace
 pub enum Token<'src> {
     #[token("false", |_| false)]
     #[token("true", |_| true)]
