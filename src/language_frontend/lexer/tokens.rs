@@ -4,8 +4,8 @@ use logos::{Logos};
 
 #[derive(Logos, Debug, Clone, PartialEq)]
 pub enum Token {
-    Error,
-
+    #[token(r"\n")]
+    NewLine,
     // Identifier
     #[regex(r"[a-zA-Z_][a-zA-Z0-9_]*", |lex| lex.slice().to_owned())]
     Identifier(String),
@@ -133,20 +133,33 @@ pub enum Token {
     #[token(":")]
     Colon,
 
+    #[token(",")]
+    Comma,
+
+    #[token(".")]
+    Dot,
+
     // Special
-    #[regex(r"//[^\n\r]*", logos::skip)]
+
+
+    #[regex(r"//[^\r]*", logos::skip)]
     #[regex(r"/\*([^*]|\*[^/])*\*/", logos::skip)]
     Comment,
     
-    #[regex(r"[ \t\n\f]+", logos::skip)]
+
+
+    #[regex(r"[\t\r\f]+", logos::skip)]
     Whitespace,
-    
+
     Eof,
+
+    Error,
 }
 
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Token::NewLine => write!(f, ""),
             Token::Identifier(ident) => write!(f, "{ident}"),
             Token::Fun => write!(f, "fun"),
             Token::Class => write!(f, "class"),
@@ -186,6 +199,8 @@ impl fmt::Display for Token {
             Token::LBracket => write!(f, "["),
             Token::RBracket => write!(f, "]"),
             Token::Colon => write!(f, ":"),
+            Token::Comma => write!(f, ","),
+            Token::Dot => write!(f, "."),
             Token::Comment => write!(f, ""),
             Token::Whitespace => write!(f, ""),
             Token::Eof => write!(f, ""),

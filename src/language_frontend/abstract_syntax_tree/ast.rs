@@ -1,47 +1,60 @@
 use std::rc::Rc;
 
+use chumsky::span::Span;
+
 
 
 /// Abstract Syntax Tree
 pub type BlockStatement = Vec<Statement>;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
-    Ident(Ident),
-    Literal(Literal),
-    Call(FunctionCall),
+    Ident(String),
+
+    IntLiteral(i64),
+
+    FloatLiteral(f64),
+
+    StringLiteral(String),
+
+    BoolLiteral(bool),
+
+    CharLiteral(char),
+
+    Null,
+
+
+    Call {
+        callee: Box<Expr>,
+        arguments: Vec<Expr>,
+    },
+
+    Unary {
+        operator: UnaryOp,
+        operand: Box<Expr>,
+    },
+
+    Binary {
+        lhs: Box<Expr>,
+        operator: BinaryOp,
+        rhs: Box<Expr>,
+    },
+
+    Assignment {
+        target: Box<Expr>,
+        value: Box<Expr>,
+    },
+    Error,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct FunctionCall {
-    pub parameters: Vec<Expr>,
     pub name: Rc<str>,
+    pub parameters: Vec<Expr>,
+    pub(crate) args: Vec<String>,
 }
 
-#[derive(Debug, Clone)]
-pub enum ExprResult {
-    Bool(bool),
-    UnsignedInteger(usize),
-    SignedInteger(isize),
-    Char(char),
-    Return(Box<ExprResult>),
-    Void,
-}
-
-impl std::fmt::Display for ExprResult {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ExprResult::Bool(b) => write!(f, "{b}"),
-            ExprResult::UnsignedInteger(i) => write!(f, "{i}"),
-            ExprResult::SignedInteger(i) => write!(f, "{i}"),
-            ExprResult::Char(c) => write!(f, "{c}"),
-            ExprResult::Return(v) => write!(f, "{}", *v),
-            ExprResult::Void => write!(f, ""),
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum BinaryOp {
     Multiply,
     Divide,
@@ -59,43 +72,45 @@ pub enum BinaryOp {
     Or,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum UnaryOp {
     Not,
     Minus,
     Plus,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Literal {
-    UnsignedInteger(usize),
+    UnsignedInteger(u64),
     Bool(bool),
     Char(char),
     String(Rc<str>),
+    Int(i64),
+    Float(f64),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Ident(pub Rc<str>);
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Statement {
     Var(Ident, Option<Type>)
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct While {
     pub condition: Expr,
     pub body: BlockStatement,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Condition {
     pub condition: Expr,
     pub if_body: BlockStatement,
     pub else_body: Option<BlockStatement>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Type {
     UnsignedInteger,
     SignedInteger,
@@ -104,6 +119,7 @@ pub enum Type {
     String,
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum Value {
     UnsignedInteger(u32),
     SignedInteger(i32),
@@ -125,7 +141,7 @@ impl Value {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Function {
     pub name: Rc<str>,
     pub params: Vec<(Ident, Type)>,

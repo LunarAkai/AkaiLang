@@ -38,16 +38,20 @@ fn main() {
         // This involves giving chumsky an 'end of input' span: we just use a zero-width span at the end of the string
         .map((0..sourcecode.len()).into(), |(t, s): (_, _)| (t, s));
 
+    println!("{:?}", sourcecode);
+
+    let lexer =  Token::lexer(&sourcecode)
+        .spanned()
+        .collect::<Vec<_>>();
+    
+    for token in lexer {
+        println!("{:?}", token);
+    }  
 
     match parser().parse(token_stream).into_result() {
-        Ok(ast) => match eval(&ast, &mut Vec::new(), &mut Vec::new()) {
-            Ok(output) => println!("{output}"),
-            Err(eval_err) => println!("Evaluation error: {eval_err}"),
-        },
-        Err(parse_errs) => parse_errs
-            .into_iter()
-            .for_each(|err| println!("Parse error: {err}")),
+        Ok(res) => println!("{:?}", res),
+        Err(e) => {
+            panic!("{:#?}", e)
+        }
     }; 
-
-    //println!("\n[result]\n{}", abstract_syntax_tree::ast::eval(absyntr, vars, funcs));
 }
