@@ -1,5 +1,5 @@
 use chumsky::{
-    combinator::Or, prelude::{choice, just, recursive}, recursive, select, select_ref, text::{self, ascii::ident, whitespace}, IterParser, Parser
+    combinator::Or, error::Rich, extra, input::ValueInput, prelude::{choice, just, recursive}, recursive, select, select_ref, span::SimpleSpan, text::{self, ascii::ident, whitespace}, IterParser, Parser
 };
 
 use crate::{language_frontend::abstract_syntax_tree::ast::Expression, language_frontend::lexer::tokens::Token};
@@ -7,36 +7,24 @@ use crate::{language_frontend::abstract_syntax_tree::ast::Expression, language_f
 // goal of parsing is to construct an abstract syntax tree
 
 #[allow(clippy::let_and_return)]
-pub fn parser<'src>() -> impl Parser<'src, &'src [Token<'src>], Expression<'src>> {
-    let ident = select_ref! {
-        Token::Ident(ident) => *ident
-    };
-
-    let keyword = |kw: &'static str| {
-        select! {
-            Token::Keyword(k) if k == kw => ()
-        }
-    };
-
-    let eq = just(Token::Equals);
-
+pub fn parser<'tokens, 'src: 'tokens, I>() -> impl Parser<'tokens, I, Expression<'src>, extra::Err<Rich<'tokens, Token<'src>>>> 
+where 
+    I: ValueInput<'tokens, Token = Token<'src>, Span = SimpleSpan>,
+{
+    
     let expr = recursive(|expr| {
+        
         let atom = select! {
             Token::Float(x) => Expression::Float(x),
-
+            Token::Integer(x) => Expression::Integer(x),
         };
 
         let unary = just(Token::Substract)
             .repeated()
-            .foldr(atom, |_op, rhs| Expression::Negatation(Box::new(rhs)));
+            .foldr(atom.clone(), |_op, rhs| Expression::Negatation(Box::new(rhs)));
 
-        // "Punktrechnung vor Strichrechnung :nerd:"
-
-        let binary_1 = unary.clone().foldl(
-            just(Token::Multiply)
-                .or(just(Token::Divide))
-                .then(unary)
-                .repeated(),
+        let mul_div = unary.clone().foldl(
+            just(Token::Multiply).or(just(Token::Divide)).then(unary).repeated(),
             |lhs, (op, rhs)| match op {
                 Token::Multiply => Expression::Multiply(Box::new(lhs), Box::new(rhs)),
                 Token::Divide => Expression::Divide(Box::new(lhs), Box::new(rhs)),
@@ -44,48 +32,16 @@ pub fn parser<'src>() -> impl Parser<'src, &'src [Token<'src>], Expression<'src>
             },
         );
 
-        let binary_2 = binary_1.clone().foldl(
-            just(Token::Add)
-                .or(just(Token::Substract))
-                .then(binary_1)
-                .repeated(),
+        let add_sub = mul_div.clone().foldl(
+            just(Token::Add).or(just(Token::Substract)).then(mul_div).repeated(),
             |lhs, (op, rhs)| match op {
                 Token::Add => Expression::Add(Box::new(lhs), Box::new(rhs)),
                 Token::Substract => Expression::Substract(Box::new(lhs), Box::new(rhs)),
                 _ => unreachable!(),
             },
         );
-
-        binary_2
+        
+        add_sub
     });
-
-    let decl = recursive(|decl| {
-        let r#var = keyword("var")
-            .ignore_then(ident)
-            .then_ignore(eq.clone())
-            .then(expr.clone())
-            .then(decl.clone())
-            .map(|((name, rhs), then)| Expression::Var {
-                name,
-                rhs: Box::new(rhs),
-                then: Box::new(then),
-            });
-
-        let r#fun = keyword("fun")
-            .ignore_then(ident.clone())
-            .then(ident.repeated().collect::<Vec<_>>())
-            .then_ignore(eq.clone())
-            .then(expr.clone())
-            .then(decl)
-            .map(|(((name, args), body), then)| Expression::Function {
-                name,
-                args,
-                body: Box::new(body),
-                then: Box::new(then),
-            });
-
-        var.or(r#fun).or(expr)
-    });
-
-    decl
+    expr
 }

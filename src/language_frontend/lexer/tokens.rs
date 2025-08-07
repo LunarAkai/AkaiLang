@@ -5,6 +5,8 @@ use logos::{Lexer, Logos};
 #[derive(Logos, Debug, Clone, PartialEq)]
 #[logos(skip r"[ \t\r\n\f]+")] // Skip whitespace
 pub enum Token<'src> {
+    Error,
+
     #[token("false", |_| false)]
     #[token("true", |_| true)]
     Bool(bool),
@@ -79,6 +81,7 @@ impl fmt::Display for Token<'_> {
             Token::Ident(s) => write!(f, "{s}"),
             Token::String(s) => write!(f, "{s}"),
             Token::Keyword(s) => write!(f, "{s}"),
+            Token::Error => write!(f, "<error>")
         }
     }
 }
