@@ -41,8 +41,8 @@ fn main() {
     println!("{:?}", sourcecode);
 
     let lexer =  Token::lexer(&sourcecode)
-        .spanned()
-        .collect::<Vec<_>>();
+        .spanned();
+        //.collect::<Vec<_>>();
     
     for token in lexer {
         println!("{:?}", token);
