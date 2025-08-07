@@ -1,6 +1,6 @@
 /// Abstract Syntax Tree
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expression<'src> {
     // Identifier
     Ident(&'src str),

@@ -3,9 +3,14 @@ use std::fmt;
 use logos::{Lexer, Logos};
 
 #[derive(Logos, Debug, Clone, PartialEq)]
-#[logos(skip r"[ \t\r\n\f]+")] // Skip whitespace
+#[logos(skip r"[ \r\f]+")] // Skip whitespace
 pub enum Token<'src> {
     Error,
+    Null,
+
+    Indent,
+    NewLine,
+    Dedent,
 
     #[token("false", |_| false)]
     #[token("true", |_| true)]
@@ -66,6 +71,10 @@ impl fmt::Display for Token<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Token::Float(s) => write!(f, "{s}"),
+            Token::Null => write!(f, "<null>"),
+            Token::Indent => write!(f, "<indent>"),
+            Token::NewLine => write!(f, "<new_line>"),
+            Token::Dedent => write!(f, "<dedent>"),
             Token::Add => write!(f, "+"),
             Token::Bool(_) => write!(f, "+"),
             Token::Substract => write!(f, "-"),
@@ -81,7 +90,8 @@ impl fmt::Display for Token<'_> {
             Token::Ident(s) => write!(f, "{s}"),
             Token::String(s) => write!(f, "{s}"),
             Token::Keyword(s) => write!(f, "{s}"),
-            Token::Error => write!(f, "<error>")
+            Token::Error => write!(f, "<error>"),
+           
         }
     }
 }

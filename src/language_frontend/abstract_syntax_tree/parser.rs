@@ -1,5 +1,5 @@
 use chumsky::{
-    combinator::Or, error::Rich, extra, input::ValueInput, prelude::{choice, just, recursive}, primitive::select, recursive, select, select_ref, span::SimpleSpan, text::{self, ascii::{ident, keyword}, whitespace}, Boxed, IterParser, Parser
+    combinator::Or, error::Rich, extra, input::ValueInput, prelude::{choice, just, nested_delimiters, recursive, via_parser}, primitive::select, recursive, select, select_ref, span::{self, SimpleSpan}, text::{self, ascii::{ident, keyword}, whitespace}, Boxed, ConfigIterParser, IterParser, Parser
 };
 
 use crate::{language_frontend::abstract_syntax_tree::ast::Expression, language_frontend::lexer::tokens::Token};
@@ -22,16 +22,38 @@ where
             Token::Keyword(k) if k == kw => (),
         }
     };
+
+    
     
     let eq = just(Token::Equals).labelled("=");
 
+    /* 
+    let block = recursive(|block| {
+        let indent = just(Token::NewLine)
+            .ignore_then(just(Token::Indent))
+            .ignore_then(block.clone().separated_by(just(Token::NewLine)).at_least(1))
+            .then_ignore(just(Token::Dedent));
+
+        block.with_ctx(0)
+    });
+
+    */
+
     let expr = recursive(|expr| {
+        let block = expr
+            .clone()
+            .delimited_by(just(Token::BraceBegin), just(Token::BraceEnd));
 
 
+        
+        // 'Atoms' are expressions that contain no ambiguity
         let atom = select! {
             Token::Float(x) => Expression::Float(x),
             Token::Integer(x) => Expression::Integer(x),
-        }.or(expr.clone().delimited_by(just(Token::ParenBegin), just(Token::ParenEnd)));
+        }.or(
+            expr.clone().delimited_by(just(Token::ParenBegin), 
+            just(Token::ParenEnd))
+        ).or(block);
 
 
         let unary = just(Token::Substract)
@@ -59,6 +81,8 @@ where
         add_sub
     });
 
+
+    
     let decl = recursive(|decl| {
         let var = keyword("var")
             .ignore_then(ident)
