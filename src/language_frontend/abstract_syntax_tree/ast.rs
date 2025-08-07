@@ -21,8 +21,13 @@ pub enum Expr {
 
     CharLiteral(char),
 
-    Null,
+    Result, // todo
 
+    Option, // todo
+
+    Ok,     // todo
+
+    Err,    // todo
 
     Call {
         callee: Box<Expr>,

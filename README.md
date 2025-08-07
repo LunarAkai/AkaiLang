@@ -7,6 +7,7 @@ Akai Lang (yeah I'm not creative and the name is still unused on github, sooo) i
 ## Planned Features
 - Object-Oriented
 - dynamic typing / Type inference
+- Rust-like Error handling ( Result<T,E> )
 - LLVM Backend
 
 ## Hello World

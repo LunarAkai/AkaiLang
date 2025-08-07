@@ -1,4 +1,5 @@
 use chumsky::input::{Input, Stream};
+use chumsky::prelude::end;
 use chumsky::Parser;
 use logos::Logos;
 
@@ -32,10 +33,10 @@ fn main() {
             Err(()) => (Token::Error, span.into()),
         });
 
-    println!("Token Stream:");
-    for (token, span) in token_iter.clone() {
-        println!("{:?} at {:?}", token, span);
-    }
+    //println!("Token Stream:");
+    //for (token, span) in token_iter.clone() {
+    //    println!("{:?} at {:?}", token, span);
+    //}
 
     // Turn the token iterator into a stream that chumsky can use for things like backtracking
     let token_stream = Stream::from_iter(token_iter)
@@ -45,15 +46,17 @@ fn main() {
 
     println!("{:?}", sourcecode);
 
+    /*
     let lexer =  Token::lexer(&sourcecode)
         .spanned();
         //.collect::<Vec<_>>();
     
     for token in lexer {
         println!("{:?}", token);
-    }  
+    } 
+    */ 
 
-    match parser().parse(token_stream).into_result() {
+    match parser().then_ignore(end()).parse(token_stream).into_result() {
         Ok(res) => println!("{:?}", res),
         Err(e) => {
             panic!("{:#?}", e)
