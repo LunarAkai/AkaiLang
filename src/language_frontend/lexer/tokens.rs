@@ -3,6 +3,7 @@ use std::fmt;
 use logos::{Logos};
 
 #[derive(Logos, Debug, Clone, PartialEq)]
+#[regex(r"[ \t\f]+", logos::skip)]
 pub enum Token {
     // Identifier
     #[regex(r"[a-zA-Z_][a-zA-Z0-9_]*", |lex| lex.slice().to_owned())]
@@ -138,6 +139,8 @@ pub enum Token {
 
     // Special
 
+    #[regex(r"\n")]
+    NewLine,
 
     #[regex(r"//[^\r]*", logos::skip)]
     #[regex(r"/\*([^*]|\*[^/])*\*/", logos::skip)]
@@ -146,8 +149,7 @@ pub enum Token {
     #[regex(r"[ \t\f]+", logos::skip)]
     Whitespace,
     
-    #[token(r"[ \n]")]
-    NewLine,
+  
 
     Eof,
 

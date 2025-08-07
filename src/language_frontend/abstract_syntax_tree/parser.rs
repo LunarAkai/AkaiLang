@@ -1,5 +1,5 @@
 use chumsky::{
-    combinator::Or, error::Rich, extra, input::ValueInput, prelude::{choice, end, just, nested_delimiters, recursive, via_parser}, primitive::select, recursive, select, select_ref, span::{self, SimpleSpan}, text::{self, ascii::{ident, keyword}, whitespace}, Boxed, ConfigIterParser, IterParser, Parser
+    combinator::Or, error::Rich, extra, input::ValueInput, prelude::{choice, end, just, nested_delimiters, recursive, via_parser}, primitive::select, recursive, select, select_ref, span::{self, SimpleSpan}, text::{self, ascii::{ident, keyword}, newline, whitespace}, Boxed, ConfigIterParser, IterParser, Parser
 };
 
 use crate::language_frontend::{abstract_syntax_tree::ast::{BinaryOp, Expr}, lexer::tokens::Token};
@@ -69,7 +69,7 @@ where
             .ignore_then(ident)
             .then_ignore(just(Token::Assign))
             .then(expr.clone())
-            .then_ignore(just(Token::NewLine).or_not())
+            .then_ignore(just(Token::NewLine))
             .map(|(name, rhs)| Expr::Assignment {
                 target: Box::new(Expr::Ident(name)), 
                 value: Box::new(rhs), 

@@ -32,6 +32,11 @@ fn main() {
             Err(()) => (Token::Error, span.into()),
         });
 
+    println!("Token Stream:");
+    for (token, span) in token_iter.clone() {
+        println!("{:?} at {:?}", token, span);
+    }
+
     // Turn the token iterator into a stream that chumsky can use for things like backtracking
     let token_stream = Stream::from_iter(token_iter)
         // Tell chumsky to split the (Token, SimpleSpan) stream into its parts so that it can handle the spans for us
