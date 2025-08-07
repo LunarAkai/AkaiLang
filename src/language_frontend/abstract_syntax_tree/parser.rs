@@ -64,19 +64,21 @@ where
 
         add_sub
     });
+    let decl = recursive(|decl| {
+        let r#var = just(Token::Var)
+            .ignore_then(ident)
+            .then_ignore(just(Token::Assign))
+            .then(expr.clone())
+            .then_ignore(just(Token::NewLine).or_not())
+            .then(decl)
+            .map(|(name, rhs)| Expr::Assignment {
+                target: Box::new(Expr::Ident(name.0)), 
+                value: Box::new(rhs), 
+            });
+        r#var.or(expr)   
+    });
 
-    let var = just(Token::Var)
-        .ignore_then(ident)
-        .then_ignore(just(Token::Assign))
-        .then(expr.clone())
-        .then_ignore(just(Token::NewLine).or_not())
-        .map(|(name, rhs)| Expr::Assignment {
-            target: Box::new(Expr::Ident(name)), 
-            value: Box::new(rhs), 
-        });
-    
-
-    var.or(expr)
+    decl.then_ignore(end())
   
 
 }
