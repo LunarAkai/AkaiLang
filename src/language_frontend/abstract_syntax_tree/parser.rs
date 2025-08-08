@@ -50,6 +50,7 @@ where
                 just(Token::Divide).to(BinaryOp::Divide),
             ))
             .then(atom)
+            .then_ignore(just(Token::NewLine).or_not())
             .repeated(),
             |lhs, (op, rhs)| Expr::Binary {
                 lhs: Box::new(lhs),
@@ -64,6 +65,7 @@ where
                 just(Token::Substract).to(BinaryOp::Substract),
             ))
             .then(mul_div)
+            .then_ignore(just(Token::NewLine).or_not())
             .repeated(),
             |lhs, (op, rhs)| Expr::Binary {
                 lhs: Box::new(lhs),
