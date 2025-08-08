@@ -1,20 +1,33 @@
 use chumsky::{
-    combinator::Or, error::Rich, extra, input::ValueInput, prelude::{choice, end, just, nested_delimiters, recursive, via_parser}, primitive::select, recursive, select, select_ref, span::{self, SimpleSpan}, text::{self, ascii::{ident, keyword}, newline, whitespace}, Boxed, ConfigIterParser, IterParser, Parser
+    combinator::Or, error::Rich, extra, input::{Input, Stream, ValueInput}, prelude::{choice, end, just, nested_delimiters, recursive, skip_then_retry_until, via_parser}, primitive::select, recursive, select, select_ref, span::{self, SimpleSpan}, text::{self, ascii::{ident, keyword}, newline, whitespace}, Boxed, ConfigIterParser, IterParser, ParseResult, Parser
 };
+use logos::{source, Logos};
 
-use crate::language_frontend::{abstract_syntax_tree::ast::{BinaryOp, Expr}, lexer::tokens::Token};
+use crate::language_frontend::{abstract_syntax_tree::ast::{BinaryOp, Expr, UnaryOp}, lexer::tokens::{self, Token}};
 
 // goal of parsing is to construct an abstract syntax tree
 
-#[allow(clippy::let_and_return)]
-pub fn parser<'tokens, 'src: 'tokens, I>() 
-    -> impl Parser<'tokens, I, Expr, extra::Err<Rich<'tokens, Token>>> 
+
+
+pub fn parse(source: &str) ->Result<Vec<Expr>, Vec<Rich<'_, Token>>> {
+    let token_iter = Token::lexer(source).spanned().map(|(token, span)| (token.unwrap_or(Token::Error), span.into()));
+
+    let end_of_input: SimpleSpan = (source.len()..source.len()).into();
+    let token_stream = Stream::from_iter(token_iter)
+        // Tell chumsky to split the (Token, SimpleSpan) stream into its parts so that it can handle the spans for us
+        // This involves giving chumsky an 'end of input' span: we just use a zero-width span at the end of the string
+        .map((0..end_of_input.into_iter().len()).into(), |(t, s): (_, _)| (t, s));
+
+    parser().parse(token_stream).into_result()
+}
+
+
+fn parser<'src, I>() 
+    -> impl Parser<'src, I, Vec<Expr>, extra::Err<Rich<'src, Token>>>
 where 
-    I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
+    I: ValueInput<'src, Token = Token, Span = SimpleSpan>,
 {
-    let ident = select! {
-        Token::Identifier(s) => s,
-    };
+    let ident = select! { Token::Identifier(s) => s, };
     /* 
     let block = recursive(|block| {
         let indent = just(Token::NewLine)
@@ -64,7 +77,7 @@ where
 
         add_sub
     });
-    //let decl = recursive(|decl| {
+    let decl = recursive(|decl| {
         let var = just(Token::Var)
             .ignore_then(ident)
             .then_ignore(just(Token::Assign))
@@ -74,9 +87,9 @@ where
                 target: Box::new(Expr::Ident(name)), 
                 value: Box::new(rhs), 
             });
-        var.or(expr)   
-    //});
-    //decl.then_ignore(end())
-  
+        var.or(expr)
+    });
+
+    decl.repeated().collect()
 
 }
