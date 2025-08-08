@@ -9,7 +9,6 @@ use crate::language_frontend::{abstract_syntax_tree::{ast::Expr, definitions::*}
 
 pub fn parse(source: &str) ->Result<Vec<Expr>, Vec<Rich<'_, Token>>> {
     let token_iter = Token::lexer(source).spanned().map(|(token, span)| (token.unwrap_or(Token::Error), span.into()));
-
     let end_of_input: SimpleSpan = (0..source.len()).into();
     let token_stream = Stream::from_iter(token_iter)
         // Tell chumsky to split the (Token, SimpleSpan) stream into its parts so that it can handle the spans for us
@@ -86,11 +85,28 @@ where
                 target: Box::new(Expr::Ident(name)), 
                 value: Box::new(rhs), 
             });
+        /*
+        let fun = just(Token::Fun)
+            .ignore_then(ident.clone())
+            .then_ignore(just(Token::LParen))
+            .then_ignore(just(Token::RParen))
+            .map(|(((name, args), ret), (body, body_expr))| Expr::Function(Function { 
+                name,
+                params: args, 
+                return_type: ret, 
+                body, 
+                body_expr 
+            })); */
         var.or(expr)
     });
 
     decl.repeated().collect()
 
+}
+
+pub fn lex(source: &str) -> Vec<Token> {
+    Token::lexer(&source)
+        .filter_map(|t| t.ok()).collect()
 }
 
 #[cfg(test)]

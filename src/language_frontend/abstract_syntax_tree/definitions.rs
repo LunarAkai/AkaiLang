@@ -50,8 +50,8 @@ pub enum Literal {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Type {
-    UnsignedInteger,
-    SignedInteger,
+    Integer,
+    Float,
     Bool,
     Char,
     String,
@@ -59,8 +59,8 @@ pub enum Type {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
-    UnsignedInteger(u32),
-    SignedInteger(i32),
+    Integer(i64),
+    Float(f64),
     Bool(bool),
     Char(char),
     String(String),
@@ -71,8 +71,8 @@ impl Value {
         match (ty, self) {
             (Type::Bool, Value::Bool(_)) => true,
             (Type::Char, Value::Char(_)) => true,
-            (Type::SignedInteger, Value::SignedInteger(_)) => true,
-            (Type::UnsignedInteger, Value::UnsignedInteger(_)) => true,
+            (Type::Integer, Value::Integer(_)) => true,
+            (Type::Float, Value::Float(_)) => true,
             (Type::String, Value::String(_)) => true,
             _ => false,
         }
@@ -85,7 +85,6 @@ impl Value {
 //---------------------------------------
 #[derive(Clone, Debug, PartialEq)]
 pub struct Ident(pub Rc<str>);
-
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct While {
@@ -100,11 +99,33 @@ pub struct Condition {
     pub else_body: Option<BlockStatement>,
 }
 
+/// Represents the Structure of a `Function` in AkaiLang
+/// 
+/// Examples:
+///```AkaiLang
+///fun helloWorld() {
+///    print("Hello World")
+///}
+///``` 
+/// <br>
+/// 
+///```AkaiLang
+///fun returnsIntPlusOne(i: i32): i32 {
+///    -> i + 1
+///}
+///``` 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Function {
     pub name: Rc<str>,
     pub params: Vec<(Ident, Type)>,
     pub return_type: Option<Type>,
     pub body: Vec<Statement>,
+    pub body_expr: Option<Type>
 }
 
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Call {
+    callee: Box<Expr>,
+    arguments: Vec<Expr>,
+}

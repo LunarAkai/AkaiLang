@@ -22,10 +22,7 @@ pub enum Expr {
 
     Err,    // todo
 
-    Call {
-        callee: Box<Expr>,
-        arguments: Vec<Expr>,
-    },
+    Call(Call),
 
     Unary {
         operator: UnaryOp,
@@ -42,5 +39,8 @@ pub enum Expr {
         target: Box<Expr>,
         value: Box<Expr>,
     },
+
+    Function(Function),
+
     Error,
 }
