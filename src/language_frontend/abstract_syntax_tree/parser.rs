@@ -3,16 +3,14 @@ use chumsky::{
 };
 use logos::{source, Logos};
 
-use crate::language_frontend::{abstract_syntax_tree::ast::{BinaryOp, Expr, UnaryOp}, lexer::tokens::{self, Token}};
+use crate::language_frontend::{abstract_syntax_tree::{ast::Expr, definitions::*}, lexer::tokens::Token};
 
 // goal of parsing is to construct an abstract syntax tree
-
-
 
 pub fn parse(source: &str) ->Result<Vec<Expr>, Vec<Rich<'_, Token>>> {
     let token_iter = Token::lexer(source).spanned().map(|(token, span)| (token.unwrap_or(Token::Error), span.into()));
 
-    let end_of_input: SimpleSpan = (source.len()..source.len()).into();
+    let end_of_input: SimpleSpan = (0..source.len()).into();
     let token_stream = Stream::from_iter(token_iter)
         // Tell chumsky to split the (Token, SimpleSpan) stream into its parts so that it can handle the spans for us
         // This involves giving chumsky an 'end of input' span: we just use a zero-width span at the end of the string
@@ -37,7 +35,6 @@ where
 
         block.with_ctx(0)
     });
-
     */
 
     let expr = recursive(|expr| {
@@ -92,4 +89,11 @@ where
 
     decl.repeated().collect()
 
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+  
 }
