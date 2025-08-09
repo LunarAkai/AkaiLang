@@ -1,5 +1,6 @@
 use crate::language_frontend::abstract_syntax_tree::definitions::*;
 
+// Option and Result -> define in Std
 #[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
     Ident(String),
@@ -14,25 +15,17 @@ pub enum Expr {
 
     CharLiteral(char),
 
-    Result, // todo
+    CalExpr(Call),
 
-    Option, // todo
+    UnaryExpr(Unary),
 
-    Ok,     // todo
+    BinaryExpr(Binary),
 
-    Err,    // todo
+    AssignmentExpr(Assignment),
 
-    Call(Call),
+    VarExpr(Var),
 
-    Unary(Unary),
-
-    Binary(Binary),
-
-    Assignment(Assignment),
-
-    Var(Var),
-
-    Function(Function),
+    FunctionExpr(Function),
 
     Error,
 }

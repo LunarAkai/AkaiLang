@@ -118,8 +118,8 @@ pub struct Var {
 /// Example: `x++`
 #[derive(Clone, Debug, PartialEq)]
 pub struct Unary {
-    pub operand: Box<Expr>,
     pub operator: UnaryOp,
+    pub operand: Box<Expr>,
 }
 
 /// Example: `x++`

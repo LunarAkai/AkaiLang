@@ -4,7 +4,7 @@ use logos::Logos;
 
 mod language_frontend;
 
-use crate::language_frontend::abstract_syntax_tree::parser::lex;
+
 use crate::{
     language_frontend::lexer::tokens::Token, language_frontend::abstract_syntax_tree::parser::parse};
 

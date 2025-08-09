@@ -7,8 +7,6 @@ use crate::language_frontend::{abstract_syntax_tree::{ast::Expr, definitions::*}
 
 // goal of parsing is to construct an abstract syntax tree
 
-// todo: improve test-ability of parser
-
 pub fn parse(source: &str) ->Result<Vec<Expr>, Vec<Rich<'_, Token>>> {
     let token_iter = Token::lexer(source).spanned().map(|(token, span)| (token.unwrap_or(Token::Error), span.into()));
     let end_of_input: SimpleSpan = (0..source.len()).into();
@@ -45,6 +43,7 @@ where
         }
         .or(expr.clone().delimited_by(just(Token::LParen), just(Token::RParen)));
 
+
         let mul_div = atom.clone().foldl(
             choice((
                 just(Token::Multiply).to(BinaryOp::Multiply),
@@ -53,7 +52,7 @@ where
             .then(atom)
             .then_ignore(just(Token::NewLine).or_not())
             .repeated(),
-            |lhs, (op, rhs)| Expr::Binary ( Binary {
+            |lhs, (op, rhs)| Expr::BinaryExpr ( Binary {
                 lhs: Box::new(lhs),
                 operator: op,
                 rhs: Box::new(rhs),
@@ -68,7 +67,7 @@ where
             .then(mul_div)
             .then_ignore(just(Token::NewLine).or_not())
             .repeated(),
-            |lhs, (op, rhs)| Expr::Binary ( Binary {
+            |lhs, (op, rhs)| Expr::BinaryExpr ( Binary {
                 lhs: Box::new(lhs),
                 operator: op,
                 rhs: Box::new(rhs),
@@ -82,8 +81,8 @@ where
             .ignore_then(ident)
             .then_ignore(just(Token::Assign))
             .then(expr.clone())
-            .then_ignore(just(Token::NewLine))
-            .map(|(name, rhs)| Expr::Var ( Var {
+            .then_ignore(just(Token::NewLine).or_not())
+            .map(|(name, rhs)| Expr::VarExpr ( Var {
                 ty: None,
                 ident: name, 
                 value: Box::new(rhs),
@@ -108,14 +107,48 @@ where
 
 }
 
-pub fn lex(source: &str) -> Vec<Token> {
-    Token::lexer(&source)
-        .filter_map(|t| t.ok()).collect()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    
+    #[test]
+    fn test_unary_expr() {
+        let negate_two = parse("-2");
+        assert!(negate_two.is_ok());
+        assert_eq!(
+            negate_two.clone().unwrap(),
+            vec![Expr::UnaryExpr(Unary {
+                operator: UnaryOp::Minus,  
+                operand: Box::new(Expr::IntLiteral(2)),
+            })]
+        )
+    }
 
-  
+    #[test]
+    fn test_binary_expr() {
+        let sum = parse("1 + 2");
+        assert!(sum.is_ok());
+        assert_eq!(
+            sum.clone().unwrap(),
+            vec![Expr::BinaryExpr(Binary { 
+                lhs: Box::new(Expr::IntLiteral(1)), 
+                operator: BinaryOp::Add, 
+                rhs: Box::new(Expr::IntLiteral(2))
+            })]
+        )
+    }
+
+    #[test]
+    fn test_variable_decl() {
+        let var_without_expl_type = parse("var x = 12");
+        assert!(var_without_expl_type.is_ok());
+        assert_eq!(
+            var_without_expl_type.clone().unwrap(),
+            vec![Expr::VarExpr(Var { 
+                ty: None, 
+                ident: String::from("x"), 
+                value: Box::new(Expr::IntLiteral(12)) 
+            })] 
+        )
+    }
 }
