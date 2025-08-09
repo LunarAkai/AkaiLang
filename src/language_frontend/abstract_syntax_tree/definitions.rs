@@ -7,10 +7,9 @@ pub type BlockStatement = Vec<Statement>;
 
 pub type Span = Range<usize>;
 
-
 #[derive(Clone, Debug, PartialEq)]
 pub enum Statement {
-    Var(Ident, Option<Type>)
+    Var(Ident, Option<Type>),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -79,7 +78,6 @@ impl Value {
     }
 }
 
-
 //---------------------------------------
 //      Structs
 //---------------------------------------
@@ -99,8 +97,7 @@ pub struct Condition {
     pub else_body: Option<BlockStatement>,
 }
 
-
-/// Example: `x = 5` 
+/// Example: `x = 5`
 #[derive(Clone, Debug, PartialEq)]
 pub struct Assignment {
     pub target: Box<Expr>,
@@ -112,7 +109,7 @@ pub struct Assignment {
 pub struct Var {
     pub ty: Option<Type>,
     pub ident: String,
-    pub value: Box<Expr>
+    pub value: Box<Expr>,
 }
 
 /// Example: `x++`
@@ -131,29 +128,28 @@ pub struct Binary {
 }
 
 /// Represents the Structure of a `Function` in AkaiLang
-/// 
+///
 /// Examples:
 ///```AkaiLang
 ///fun helloWorld() {
 ///    print("Hello World")
 ///}
-///``` 
+///```
 /// <br>
-/// 
+///
 ///```AkaiLang
 ///fun returnsIntPlusOne(i: int): int {
 ///    -> i + 1
 ///}
-///``` 
+///```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Function {
     pub name: Rc<str>,
     pub params: Vec<(Ident, Type)>,
     pub return_type: Option<Type>,
     pub body: Vec<Statement>,
-    pub body_expr: Option<Type>
+    pub body_expr: Option<Type>,
 }
-
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Call {

@@ -1,31 +1,50 @@
 use chumsky::{
-    combinator::Or, error::Rich, extra, input::{Input, Stream, ValueInput}, prelude::{choice, end, just, nested_delimiters, recursive, skip_then_retry_until, via_parser}, primitive::select, recursive, select, select_ref, span::{self, SimpleSpan}, text::{self, ascii::{ident, keyword}, newline, whitespace}, Boxed, ConfigIterParser, IterParser, ParseResult, Parser
+    Boxed, ConfigIterParser, IterParser, ParseResult, Parser,
+    combinator::Or,
+    error::Rich,
+    extra,
+    input::{Input, Stream, ValueInput},
+    prelude::{choice, end, just, nested_delimiters, recursive, skip_then_retry_until, via_parser},
+    primitive::select,
+    recursive, select, select_ref,
+    span::{self, SimpleSpan},
+    text::{
+        self,
+        ascii::{ident, keyword},
+        newline, whitespace,
+    },
 };
-use logos::{source, Logos};
+use logos::{Logos, source};
 
-use crate::language_frontend::{abstract_syntax_tree::{ast::Expr, definitions::*}, lexer::tokens::Token};
+use crate::language_frontend::{
+    abstract_syntax_tree::{ast::Expr, definitions::*},
+    lexer::tokens::Token,
+};
 
 // goal of parsing is to construct an abstract syntax tree
 
-pub fn parse(source: &str) ->Result<Vec<Expr>, Vec<Rich<'_, Token>>> {
-    let token_iter = Token::lexer(source).spanned().map(|(token, span)| (token.unwrap_or(Token::Error), span.into()));
+pub fn parse(source: &str) -> Result<Vec<Expr>, Vec<Rich<'_, Token>>> {
+    let token_iter = Token::lexer(source)
+        .spanned()
+        .map(|(token, span)| (token.unwrap_or(Token::Error), span.into()));
     let end_of_input: SimpleSpan = (0..source.len()).into();
     let token_stream = Stream::from_iter(token_iter)
         // Tell chumsky to split the (Token, SimpleSpan) stream into its parts so that it can handle the spans for us
         // This involves giving chumsky an 'end of input' span: we just use a zero-width span at the end of the string
-        .map((0..end_of_input.into_iter().len()).into(), |(t, s): (_, _)| (t, s));
+        .map(
+            (0..end_of_input.into_iter().len()).into(),
+            |(t, s): (_, _)| (t, s),
+        );
 
     parser().parse(token_stream).into_result()
 }
 
-
-fn parser<'src, I>() 
-    -> impl Parser<'src, I, Vec<Expr>, extra::Err<Rich<'src, Token>>>
-where 
+fn parser<'src, I>() -> impl Parser<'src, I, Vec<Expr>, extra::Err<Rich<'src, Token>>>
+where
     I: ValueInput<'src, Token = Token, Span = SimpleSpan>,
 {
     let ident = select! { Token::Identifier(s) => s, };
-    /* 
+    /*
     let block = recursive(|block| {
         let indent = just(Token::NewLine)
             .ignore_then(just(Token::Indent))
@@ -41,8 +60,9 @@ where
             Token::FloatLiteral(x) => Expr::FloatLiteral(x),
             Token::IntLiteral(x) => Expr::IntLiteral(x),
         }
-        .or(expr.clone().delimited_by(just(Token::LParen), just(Token::RParen)));
-
+        .or(expr
+            .clone()
+            .delimited_by(just(Token::LParen), just(Token::RParen)));
 
         let mul_div = atom.clone().foldl(
             choice((
@@ -52,12 +72,14 @@ where
             .then(atom)
             .then_ignore(just(Token::NewLine).or_not())
             .repeated(),
-            |lhs, (op, rhs)| Expr::BinaryExpr ( Binary {
-                lhs: Box::new(lhs),
-                operator: op,
-                rhs: Box::new(rhs),
+            |lhs, (op, rhs)| {
+                Expr::BinaryExpr(Binary {
+                    lhs: Box::new(lhs),
+                    operator: op,
+                    rhs: Box::new(rhs),
+                })
             },
-        ));
+        );
 
         let add_sub = mul_div.clone().foldl(
             choice((
@@ -67,12 +89,14 @@ where
             .then(mul_div)
             .then_ignore(just(Token::NewLine).or_not())
             .repeated(),
-            |lhs, (op, rhs)| Expr::BinaryExpr ( Binary {
-                lhs: Box::new(lhs),
-                operator: op,
-                rhs: Box::new(rhs),
+            |lhs, (op, rhs)| {
+                Expr::BinaryExpr(Binary {
+                    lhs: Box::new(lhs),
+                    operator: op,
+                    rhs: Box::new(rhs),
+                })
             },
-        ));
+        );
 
         add_sub
     });
@@ -82,35 +106,35 @@ where
             .then_ignore(just(Token::Assign))
             .then(expr.clone())
             .then_ignore(just(Token::NewLine).or_not())
-            .map(|(name, rhs)| Expr::VarExpr ( Var {
-                ty: None,
-                ident: name, 
-                value: Box::new(rhs),
-            }
-        ));
+            .map(|(name, rhs)| {
+                Expr::VarExpr(Var {
+                    ty: None,
+                    ident: name,
+                    value: Box::new(rhs),
+                })
+            });
         /*
         let fun = just(Token::Fun)
             .ignore_then(ident.clone())
             .then_ignore(just(Token::LParen))
             .then_ignore(just(Token::RParen))
-            .map(|(((name, args), ret), (body, body_expr))| Expr::Function(Function { 
+            .map(|(((name, args), ret), (body, body_expr))| Expr::Function(Function {
                 name,
-                params: args, 
-                return_type: ret, 
-                body, 
-                body_expr 
+                params: args,
+                return_type: ret,
+                body,
+                body_expr
             })); */
         var.or(expr)
     });
 
     decl.repeated().collect()
-
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_unary_expr() {
         let negate_two = parse("-2");
@@ -118,7 +142,7 @@ mod tests {
         assert_eq!(
             negate_two.clone().unwrap(),
             vec![Expr::UnaryExpr(Unary {
-                operator: UnaryOp::Minus,  
+                operator: UnaryOp::Minus,
                 operand: Box::new(Expr::IntLiteral(2)),
             })]
         )
@@ -130,9 +154,9 @@ mod tests {
         assert!(sum.is_ok());
         assert_eq!(
             sum.clone().unwrap(),
-            vec![Expr::BinaryExpr(Binary { 
-                lhs: Box::new(Expr::IntLiteral(1)), 
-                operator: BinaryOp::Add, 
+            vec![Expr::BinaryExpr(Binary {
+                lhs: Box::new(Expr::IntLiteral(1)),
+                operator: BinaryOp::Add,
                 rhs: Box::new(Expr::IntLiteral(2))
             })]
         )
@@ -144,11 +168,11 @@ mod tests {
         assert!(var_without_expl_type.is_ok());
         assert_eq!(
             var_without_expl_type.clone().unwrap(),
-            vec![Expr::VarExpr(Var { 
-                ty: None, 
-                ident: String::from("x"), 
-                value: Box::new(Expr::IntLiteral(12)) 
-            })] 
+            vec![Expr::VarExpr(Var {
+                ty: None,
+                ident: String::from("x"),
+                value: Box::new(Expr::IntLiteral(12))
+            })]
         )
     }
 }

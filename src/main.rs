@@ -1,14 +1,14 @@
-use chumsky::input::{Input, Stream};
 use chumsky::Parser;
+use chumsky::input::{Input, Stream};
 use logos::Logos;
 
 mod language_frontend;
 
-
 use crate::{
-    language_frontend::lexer::tokens::Token, language_frontend::abstract_syntax_tree::parser::parse};
+    language_frontend::abstract_syntax_tree::parser::parse, language_frontend::lexer::tokens::Token,
+};
 
-use crate::language_frontend::abstract_syntax_tree::ast::{Expr};  
+use crate::language_frontend::abstract_syntax_tree::ast::Expr;
 
 /*
 Simple Compiler -> 4 Stages:
@@ -27,10 +27,10 @@ fn main() {
 
     println!("{:?}", sourcecode);
 
-    match parse(&sourcecode)  {
+    match parse(&sourcecode) {
         Ok(res) => println!("{:#?}", res),
         Err(e) => {
             panic!("{:#?}", e)
         }
-    }; 
+    };
 }

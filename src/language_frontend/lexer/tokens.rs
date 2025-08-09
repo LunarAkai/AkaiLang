@@ -1,6 +1,6 @@
 use std::fmt;
 
-use logos::{Logos};
+use logos::Logos;
 
 #[derive(Logos, Debug, Clone, PartialEq)]
 #[regex(r"[\t\f]+", logos::skip)]
@@ -12,7 +12,7 @@ pub enum Token {
     // Keywords
     #[token("fun")]
     Fun,
-    
+
     #[token("class")]
     Class,
 
@@ -40,19 +40,18 @@ pub enum Token {
     #[token("enum")]
     Enum,
 
-
     // Types
     #[token("int")]
-    IntType,     
+    IntType,
 
     #[token("float")]
-    FloatType, 
+    FloatType,
 
     #[token("bool")]
-    BoolType, 
+    BoolType,
 
     #[token("String")]
-    StringType, 
+    StringType,
 
     // Literals
     #[regex(r#""([^"\\]|\\.)*""#, |lex| lex.slice().to_owned())]
@@ -71,7 +70,7 @@ pub enum Token {
     // Operators
     #[token("=")]
     Assign,
-    
+
     #[token("==")]
     Equals,
 
@@ -108,7 +107,6 @@ pub enum Token {
     #[token("||")]
     Or,
 
-
     // Punctiuation
     #[token("(")]
     LParen,
@@ -138,18 +136,15 @@ pub enum Token {
     Dot,
 
     // Special
-
     #[regex(r"\n")]
     NewLine,
 
     #[regex(r"//[^\r]*", logos::skip)]
     #[regex(r"/\*([^*]|\*[^/])*\*/", logos::skip)]
     Comment,
-    
+
     #[regex(r"[ \t\f]+", logos::skip)]
     Whitespace,
-    
-  
 
     Eof,
 
