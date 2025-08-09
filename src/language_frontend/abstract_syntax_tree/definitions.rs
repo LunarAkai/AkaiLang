@@ -99,6 +99,37 @@ pub struct Condition {
     pub else_body: Option<BlockStatement>,
 }
 
+
+/// Example: `x = 5` 
+#[derive(Clone, Debug, PartialEq)]
+pub struct Assignment {
+    pub target: Box<Expr>,
+    pub value: Box<Expr>,
+}
+
+/// Example: `var String: foo = "Test"`
+#[derive(Clone, Debug, PartialEq)]
+pub struct Var {
+    pub ty: Option<Type>,
+    pub ident: String,
+    pub value: Box<Expr>
+}
+
+/// Example: `x++`
+#[derive(Clone, Debug, PartialEq)]
+pub struct Unary {
+    pub operand: Box<Expr>,
+    pub operator: UnaryOp,
+}
+
+/// Example: `x++`
+#[derive(Clone, Debug, PartialEq)]
+pub struct Binary {
+    pub lhs: Box<Expr>,
+    pub operator: BinaryOp,
+    pub rhs: Box<Expr>,
+}
+
 /// Represents the Structure of a `Function` in AkaiLang
 /// 
 /// Examples:
@@ -110,7 +141,7 @@ pub struct Condition {
 /// <br>
 /// 
 ///```AkaiLang
-///fun returnsIntPlusOne(i: i32): i32 {
+///fun returnsIntPlusOne(i: int): int {
 ///    -> i + 1
 ///}
 ///``` 
@@ -126,6 +157,6 @@ pub struct Function {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Call {
-    callee: Box<Expr>,
-    arguments: Vec<Expr>,
+    pub callee: Box<Expr>,
+    pub arguments: Vec<Expr>,
 }

@@ -7,6 +7,8 @@ use crate::language_frontend::{abstract_syntax_tree::{ast::Expr, definitions::*}
 
 // goal of parsing is to construct an abstract syntax tree
 
+// todo: improve test-ability of parser
+
 pub fn parse(source: &str) ->Result<Vec<Expr>, Vec<Rich<'_, Token>>> {
     let token_iter = Token::lexer(source).spanned().map(|(token, span)| (token.unwrap_or(Token::Error), span.into()));
     let end_of_input: SimpleSpan = (0..source.len()).into();
@@ -51,12 +53,12 @@ where
             .then(atom)
             .then_ignore(just(Token::NewLine).or_not())
             .repeated(),
-            |lhs, (op, rhs)| Expr::Binary {
+            |lhs, (op, rhs)| Expr::Binary ( Binary {
                 lhs: Box::new(lhs),
                 operator: op,
                 rhs: Box::new(rhs),
             },
-        );
+        ));
 
         let add_sub = mul_div.clone().foldl(
             choice((
@@ -66,12 +68,12 @@ where
             .then(mul_div)
             .then_ignore(just(Token::NewLine).or_not())
             .repeated(),
-            |lhs, (op, rhs)| Expr::Binary {
+            |lhs, (op, rhs)| Expr::Binary ( Binary {
                 lhs: Box::new(lhs),
                 operator: op,
                 rhs: Box::new(rhs),
             },
-        );
+        ));
 
         add_sub
     });
@@ -81,10 +83,12 @@ where
             .then_ignore(just(Token::Assign))
             .then(expr.clone())
             .then_ignore(just(Token::NewLine))
-            .map(|(name, rhs)| Expr::Assignment {
-                target: Box::new(Expr::Ident(name)), 
-                value: Box::new(rhs), 
-            });
+            .map(|(name, rhs)| Expr::Var ( Var {
+                ty: None,
+                ident: name, 
+                value: Box::new(rhs),
+            }
+        ));
         /*
         let fun = just(Token::Fun)
             .ignore_then(ident.clone())

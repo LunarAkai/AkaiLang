@@ -24,21 +24,13 @@ pub enum Expr {
 
     Call(Call),
 
-    Unary {
-        operator: UnaryOp,
-        operand: Box<Expr>,
-    },
+    Unary(Unary),
 
-    Binary {
-        lhs: Box<Expr>,
-        operator: BinaryOp,
-        rhs: Box<Expr>,
-    },
+    Binary(Binary),
 
-    Assignment {
-        target: Box<Expr>,
-        value: Box<Expr>,
-    },
+    Assignment(Assignment),
+
+    Var(Var),
 
     Function(Function),
 
