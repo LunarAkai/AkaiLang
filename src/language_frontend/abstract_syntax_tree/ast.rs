@@ -15,7 +15,7 @@ pub enum Expr {
 
     CharLiteral(char),
 
-    CalExpr(Call),
+    CallExpr(Call),
 
     UnaryExpr(Unary),
 

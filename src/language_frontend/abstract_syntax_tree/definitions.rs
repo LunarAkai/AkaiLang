@@ -97,10 +97,10 @@ pub struct Condition {
     pub else_body: Option<BlockStatement>,
 }
 
-/// Example: `x = 5`
+/// Example: `x = y`
 #[derive(Clone, Debug, PartialEq)]
 pub struct Assignment {
-    pub target: Box<Expr>,
+    pub target: String,
     pub value: Box<Expr>,
 }
 
@@ -119,7 +119,7 @@ pub struct Unary {
     pub operand: Box<Expr>,
 }
 
-/// Example: `x++`
+/// Example: `1 + 1`
 #[derive(Clone, Debug, PartialEq)]
 pub struct Binary {
     pub lhs: Box<Expr>,
@@ -144,11 +144,11 @@ pub struct Binary {
 ///```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Function {
-    pub name: Rc<str>,
-    pub params: Vec<(Ident, Type)>,
+    pub name: String,
+    pub params: Option<Vec<(Ident, Type)>>,
     pub return_type: Option<Type>,
-    pub body: Vec<Statement>,
-    pub body_expr: Option<Type>,
+    pub body: Option<Vec<Expr>>,
+    pub body_expr: Option<Box<Expr>>,
 }
 
 #[derive(Clone, Debug, PartialEq)]

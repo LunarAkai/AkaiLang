@@ -1,7 +1,7 @@
 use chumsky::{
     Boxed, ConfigIterParser, IterParser, ParseResult, Parser,
     combinator::Or,
-    error::Rich,
+    error::{Rich, Simple},
     extra,
     input::{Input, Stream, ValueInput},
     prelude::{choice, end, just, nested_delimiters, recursive, skip_then_retry_until, via_parser},
@@ -43,27 +43,21 @@ fn parser<'src, I>() -> impl Parser<'src, I, Vec<Expr>, extra::Err<Rich<'src, To
 where
     I: ValueInput<'src, Token = Token, Span = SimpleSpan>,
 {
-    let ident = select! { Token::Identifier(s) => s, };
-    /*
-    let block = recursive(|block| {
-        let indent = just(Token::NewLine)
-            .ignore_then(just(Token::Indent))
-            .ignore_then(block.clone().separated_by(just(Token::NewLine)).at_least(1))
-            .then_ignore(just(Token::Dedent));
-
-        block.with_ctx(0)
-    });
-    */
+    let ident = select! { Token::Identifier(s) => s, }.labelled("identifier");
 
     let expr = recursive(|expr| {
         let atom = select! {
             Token::FloatLiteral(x) => Expr::FloatLiteral(x),
             Token::IntLiteral(x) => Expr::IntLiteral(x),
+            Token::BoolLiteral(x) => Expr::BoolLiteral(x),
+            Token::StringLiteral(s) => Expr::StringLiteral(s),
         }
+        .labelled("value")
         .or(expr
             .clone()
             .delimited_by(just(Token::LParen), just(Token::RParen)));
 
+        // Product
         let mul_div = atom.clone().foldl(
             choice((
                 just(Token::Multiply).to(BinaryOp::Multiply),
@@ -81,6 +75,7 @@ where
             },
         );
 
+        // Sum
         let add_sub = mul_div.clone().foldl(
             choice((
                 just(Token::Add).to(BinaryOp::Add),
@@ -98,8 +93,19 @@ where
             },
         );
 
-        add_sub
+        let assign_expr = ident
+            .then_ignore(just(Token::Assign))
+            .then(expr.clone())
+            .map(|(name, value)| {
+                Expr::AssignmentExpr(Assignment {
+                    target: name,
+                    value: Box::new(value),
+                })
+            });
+
+        assign_expr.or(add_sub)
     });
+
     let decl = recursive(|decl| {
         let var = just(Token::Var)
             .ignore_then(ident)
@@ -113,19 +119,33 @@ where
                     value: Box::new(rhs),
                 })
             });
-        /*
+
         let fun = just(Token::Fun)
             .ignore_then(ident.clone())
             .then_ignore(just(Token::LParen))
+            //.then(param_parser().separated_by(just(Token::Comma)).or_not().map(|p| p.unwrap_or_default()))
             .then_ignore(just(Token::RParen))
-            .map(|(((name, args), ret), (body, body_expr))| Expr::Function(Function {
-                name,
-                params: args,
-                return_type: ret,
-                body,
-                body_expr
-            })); */
-        var.or(expr)
+            .then(
+                just(Token::LBrace)
+                    .then_ignore(just(Token::NewLine).or_not())
+                    .ignore_then(decl.clone().repeated())
+                    .then_ignore(just(Token::RBrace))
+                    .map(|stmts| (Some(stmts), None))
+                    .or(just(Token::Return)
+                        .ignore_then(expr.clone())
+                        .map(|e| (None, Some(e)))),
+            )
+            .then_ignore(just(Token::NewLine).or_not())
+            .map(|(name, (body, body_expr))| {
+                Expr::FunctionExpr(Function {
+                    name,
+                    params: None,
+                    return_type: None,
+                    body: None,
+                    body_expr: None,
+                })
+            });
+        var.or(fun).or(expr)
     });
 
     decl.repeated().collect()
@@ -144,6 +164,20 @@ mod tests {
             vec![Expr::UnaryExpr(Unary {
                 operator: UnaryOp::Minus,
                 operand: Box::new(Expr::IntLiteral(2)),
+            })]
+        )
+    }
+
+    #[test]
+    fn test_bool() {
+        let var_bool = parse("var isUwU = true");
+        assert!(var_bool.is_ok());
+        assert_eq!(
+            var_bool.clone().unwrap(),
+            vec![Expr::VarExpr(Var {
+                ty: None,
+                ident: String::from("isUwU"),
+                value: Box::new(Expr::BoolLiteral(true))
             })]
         )
     }
@@ -175,4 +209,71 @@ mod tests {
             })]
         )
     }
+
+    #[test]
+    fn test_assignment() {
+        let assign = parse("x = 12");
+        assert!(assign.is_ok());
+        assert_eq!(
+            assign.clone().unwrap(),
+            vec![Expr::AssignmentExpr(Assignment {
+                target: String::from("x"),
+                value: Box::new(Expr::IntLiteral(12))
+            })]
+        )
+    }
+
+    #[test]
+    fn test_function_decl() {
+        let empty_fun = parse("fun helloWorld() { }");
+        assert!(empty_fun.is_ok());
+        assert_eq!(
+            empty_fun.clone().unwrap(),
+            vec![Expr::FunctionExpr(Function {
+                name: String::from("helloWorld"),
+                params: None,
+                return_type: None,
+                body: None,
+                body_expr: None,
+            })]
+        );
+
+        let empty_fun_with_new_lines = parse(
+            r"fun emptyMulLines() {
+
+            }
+        ",
+        );
+        assert_eq!(
+            empty_fun_with_new_lines.clone().unwrap(),
+            vec![Expr::FunctionExpr(Function {
+                name: String::from("emptyMulLines"),
+                params: None,
+                return_type: None,
+                body: None,
+                body_expr: None,
+            })]
+        );
+
+        let fun_that_returns_int = parse(
+            r"fun returnsInt(): int {
+                -> 12
+            }
+        ",
+        );
+        assert_eq!(
+            empty_fun_with_new_lines.clone().unwrap(),
+            vec![Expr::FunctionExpr(Function {
+                name: String::from("returnsInt"),
+                params: None,
+                return_type: Some(Type::Integer),
+                body: None,
+                body_expr: Some(Box::new(Expr::IntLiteral(12))),
+            })]
+        )
+    }
 }
+
+/*
+var x = 10\nvar y = 5\n{\n    var z = 7\n}\n10 + 10\n10 - 5\n5 * 5\n10 / 2
+*/
