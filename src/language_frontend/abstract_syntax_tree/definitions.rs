@@ -145,7 +145,7 @@ pub struct Binary {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Function {
     pub name: String,
-    pub params: Option<Vec<(Identifier, Type)>>,
+    pub params: Option<Vec<(String, Type)>>,
     pub return_type: Option<Type>,
     pub body: Option<BlockExpression>,
     pub body_expr: Option<Box<Expr>>, // ' -> (return)'

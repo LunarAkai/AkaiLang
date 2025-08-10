@@ -28,13 +28,10 @@ pub fn parse(source: &str) -> Result<Vec<Expr>, Vec<Rich<'_, Token>>> {
         .spanned()
         .map(|(token, span)| (token.unwrap_or(Token::Error), span.into()));
     let end_of_input: SimpleSpan = (0..source.len()).into();
-    let token_stream = Stream::from_iter(token_iter)
-        // Tell chumsky to split the (Token, SimpleSpan) stream into its parts so that it can handle the spans for us
-        // This involves giving chumsky an 'end of input' span: we just use a zero-width span at the end of the string
-        .map(
-            (0..end_of_input.into_iter().len()).into(),
-            |(t, s): (_, _)| (t, s),
-        );
+    let token_stream = Stream::from_iter(token_iter).map(
+        (0..end_of_input.into_iter().len()).into(),
+        |(t, s): (_, _)| (t, s),
+    );
 
     parser().parse(token_stream).into_result()
 }
@@ -120,35 +117,57 @@ where
                 })
             });
 
+        let type_parser = choice((
+            just(Token::IntType).to(Type::Integer),
+            just(Token::FloatType).to(Type::Float),
+            just(Token::BoolType).to(Type::Bool),
+            just(Token::StringType).to(Type::String),
+        ));
+
+        let return_type_parser = just(Token::Colon).ignore_then(type_parser.clone()).or_not();
+
+        //---------------------------------------------------------------------------------------
+        // Function Parser
+        //---------------------------------------------------------------------------------------
         let fun = just(Token::Fun)
-            .ignore_then(ident.clone())
-            .then_ignore(just(Token::LParen))
-            //.then(param_parser().separated_by(just(Token::Comma)).or_not().map(|p| p.unwrap_or_default()))
-            .then_ignore(just(Token::RParen))
+            .ignore_then(ident) // function name
             .then(
-                just(Token::LBrace)
-                    .then_ignore(just(Token::NewLine).or_not())
-                    .ignore_then(decl.clone().repeated())
-                    .then_ignore(just(Token::RBrace))
-                    .map(|stmts| (Some(stmts), None))
-                    .or(just(Token::Return)
-                        .ignore_then(expr.clone())
-                        .map(|e| (None, Some(e)))),
+                ident
+                    .then_ignore(just(Token::Colon))
+                    .then(type_parser.clone())
+                    .separated_by(just(Token::Comma))
+                    .allow_trailing()
+                    .collect::<Vec<_>>()
+                    .delimited_by(just(Token::LParen), just(Token::RParen))
+                    .or_not(),
             )
-            .then_ignore(just(Token::NewLine).or_not())
-            .map(|(name, (body, body_expr))| {
+            .then(return_type_parser.clone())
+            .then_ignore(just(Token::LBrace))
+            .then_ignore(just(Token::NewLine).repeated())
+            .then(
+                expr.clone()
+                    .then_ignore(just(Token::NewLine))
+                    .repeated()
+                    .collect::<Vec<_>>(),
+            )
+            .then_ignore(just(Token::RBrace))
+            .map(|(((name, params), return_ty), stmts)| {
                 Expr::FunctionExpr(Function {
-                    name,
-                    params: None,
-                    return_type: None,
-                    body: None,
+                    name: name,
+                    params,
+                    return_type: return_ty,
+                    body: Some(stmts),
                     body_expr: None,
                 })
             });
+
         var.or(fun).or(expr)
     });
 
-    decl.repeated().collect()
+    decl.clone()
+        .then_ignore(just(Token::NewLine).repeated())
+        .repeated()
+        .collect()
 }
 
 #[cfg(test)]
@@ -232,9 +251,9 @@ mod tests {
             empty_fun.clone().unwrap(),
             vec![Expr::FunctionExpr(Function {
                 name: String::from("helloWorld"),
-                params: None,
+                params: Some([].to_vec()),
                 return_type: None,
-                body: None,
+                body: Some([].to_vec()),
                 body_expr: None,
             })]
         );
@@ -250,9 +269,9 @@ mod tests {
             empty_fun_with_new_lines.clone().unwrap(),
             vec![Expr::FunctionExpr(Function {
                 name: String::from("emptyMulLines"),
-                params: None,
+                params: Some([].to_vec()),
                 return_type: None,
-                body: None,
+                body: Some([].to_vec()),
                 body_expr: None,
             })]
         );
@@ -265,13 +284,13 @@ mod tests {
         ",
         );
         assert_eq!(
-            empty_fun_with_new_lines.clone().unwrap(),
+            fun_that_returns_int.clone().unwrap(),
             vec![Expr::FunctionExpr(Function {
                 name: String::from("returnsInt"),
                 params: None,
                 return_type: Some(Type::Integer),
-                body: None,
-                body_expr: Some(Box::new(Expr::IntLiteral(12))),
+                body: Some(vec![Expr::IntLiteral(12)]),
+                body_expr: Some(Box::new(Expr::ReturnExpr)),
             })]
         )
     }

@@ -42,5 +42,8 @@ pub enum Expr {
     // fun helloWorld() { ... }
     FunctionExpr(Function),
 
+    // ->
+    ReturnExpr,
+
     Error,
 }
