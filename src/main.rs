@@ -3,6 +3,7 @@ use chumsky::input::{Input, Stream};
 use logos::Logos;
 
 mod language_frontend;
+mod llvm_backend;
 
 use crate::{
     language_frontend::abstract_syntax_tree::parser::parse, language_frontend::lexer::tokens::Token,

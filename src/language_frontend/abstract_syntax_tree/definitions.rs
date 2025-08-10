@@ -2,23 +2,21 @@ use std::{ops::Range, rc::Rc};
 
 use crate::language_frontend::abstract_syntax_tree::ast::Expr;
 
-/// Abstract Syntax Tree
-pub type BlockStatement = Vec<Statement>;
+// Abstract Syntax Tree
+
+pub type BlockExpression = Vec<Expr>;
 
 pub type Span = Range<usize>;
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum Statement {
-    Var(Ident, Option<Type>),
-}
-
-#[derive(Clone, Debug, PartialEq)]
 pub enum BinaryOp {
+    // Arithmetic
     Multiply,
     Divide,
     Add,
     Substract,
 
+    // Comparision
     Equals,
     NotEquals,
     Less,
@@ -26,15 +24,16 @@ pub enum BinaryOp {
     Greater,
     GreaterEquals,
 
+    // Logical
     And,
     Or,
+    // todo: bitwise
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum UnaryOp {
     Not,
-    Minus,
-    Plus,
+    Negate,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -82,19 +81,20 @@ impl Value {
 //      Structs
 //---------------------------------------
 #[derive(Clone, Debug, PartialEq)]
-pub struct Ident(pub Rc<str>);
+pub struct Identifier(pub String);
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct While {
-    pub condition: Expr,
-    pub body: BlockStatement,
+    pub condition: Box<Expr>,
+    pub body: BlockExpression,
 }
 
+/// Example: `if (a > 12) { ... }`
 #[derive(Clone, Debug, PartialEq)]
 pub struct Condition {
-    pub condition: Expr,
-    pub if_body: BlockStatement,
-    pub else_body: Option<BlockStatement>,
+    pub condition: Box<Expr>,
+    pub if_body: BlockExpression,
+    pub else_body: Option<BlockExpression>,
 }
 
 /// Example: `x = y`
@@ -108,7 +108,7 @@ pub struct Assignment {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Var {
     pub ty: Option<Type>,
-    pub ident: String,
+    pub ident: Identifier,
     pub value: Box<Expr>,
 }
 
@@ -145,14 +145,17 @@ pub struct Binary {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Function {
     pub name: String,
-    pub params: Option<Vec<(Ident, Type)>>,
+    pub params: Option<Vec<(Identifier, Type)>>,
     pub return_type: Option<Type>,
-    pub body: Option<Vec<Expr>>,
-    pub body_expr: Option<Box<Expr>>,
+    pub body: Option<BlockExpression>,
+    pub body_expr: Option<Box<Expr>>, // ' -> (return)'
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Call {
-    pub callee: Box<Expr>,
+    /// name of the function being called
+    pub name: Box<Identifier>,
+
+    /// arguments supplied
     pub arguments: Vec<Expr>,
 }

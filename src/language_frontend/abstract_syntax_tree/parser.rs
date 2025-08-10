@@ -115,7 +115,7 @@ where
             .map(|(name, rhs)| {
                 Expr::VarExpr(Var {
                     ty: None,
-                    ident: name,
+                    ident: Identifier(String::from(name)),
                     value: Box::new(rhs),
                 })
             });
@@ -157,12 +157,12 @@ mod tests {
 
     #[test]
     fn test_unary_expr() {
-        let negate_two = parse("-2");
+        let negate_two = parse("!2");
         assert!(negate_two.is_ok());
         assert_eq!(
             negate_two.clone().unwrap(),
             vec![Expr::UnaryExpr(Unary {
-                operator: UnaryOp::Minus,
+                operator: UnaryOp::Negate,
                 operand: Box::new(Expr::IntLiteral(2)),
             })]
         )
@@ -176,7 +176,7 @@ mod tests {
             var_bool.clone().unwrap(),
             vec![Expr::VarExpr(Var {
                 ty: None,
-                ident: String::from("isUwU"),
+                ident: Identifier(String::from("isUwU")),
                 value: Box::new(Expr::BoolLiteral(true))
             })]
         )
@@ -204,7 +204,7 @@ mod tests {
             var_without_expl_type.clone().unwrap(),
             vec![Expr::VarExpr(Var {
                 ty: None,
-                ident: String::from("x"),
+                ident: Identifier(String::from("x")),
                 value: Box::new(Expr::IntLiteral(12))
             })]
         )
@@ -225,6 +225,7 @@ mod tests {
 
     #[test]
     fn test_function_decl() {
+        // test without a body or args
         let empty_fun = parse("fun helloWorld() { }");
         assert!(empty_fun.is_ok());
         assert_eq!(
@@ -238,6 +239,7 @@ mod tests {
             })]
         );
 
+        // tests if empty new lines within a function works
         let empty_fun_with_new_lines = parse(
             r"fun emptyMulLines() {
 
@@ -255,6 +257,7 @@ mod tests {
             })]
         );
 
+        // tests for return expr in functions
         let fun_that_returns_int = parse(
             r"fun returnsInt(): int {
                 -> 12
