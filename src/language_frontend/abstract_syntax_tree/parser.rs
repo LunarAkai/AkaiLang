@@ -126,12 +126,17 @@ where
 
         let return_type_parser = just(Token::Colon).ignore_then(type_parser.clone()).or_not();
 
+        let return_expr = just(Token::Return)
+            .ignore_then(expr.clone())
+            .map(|expr| (expr));
+
         //---------------------------------------------------------------------------------------
         // Function Parser
         //---------------------------------------------------------------------------------------
         let fun = just(Token::Fun)
             .ignore_then(ident) // function name
             .then(
+                // arguments
                 ident
                     .then_ignore(just(Token::Colon))
                     .then(type_parser.clone())
@@ -141,16 +146,18 @@ where
                     .delimited_by(just(Token::LParen), just(Token::RParen))
                     .or_not(),
             )
-            .then(return_type_parser.clone())
-            .then_ignore(just(Token::LBrace))
-            .then_ignore(just(Token::NewLine).repeated())
+            .then(return_type_parser.clone()) // return type
+            .then_ignore(just(Token::LBrace)) // {
+            .then_ignore(just(Token::NewLine).repeated().or_not())
+            .then_ignore(return_expr.or_not())
             .then(
                 expr.clone()
                     .then_ignore(just(Token::NewLine))
                     .repeated()
                     .collect::<Vec<_>>(),
             )
-            .then_ignore(just(Token::RBrace))
+            .then_ignore(just(Token::NewLine).repeated().or_not())
+            .then_ignore(just(Token::RBrace)) // }
             .map(|(((name, params), return_ty), stmts)| {
                 Expr::FunctionExpr(Function {
                     name: name,
@@ -279,7 +286,7 @@ mod tests {
         // tests for return expr in functions
         let fun_that_returns_int = parse(
             r"fun returnsInt(): int {
-                -> 12
+                -> 12 
             }
         ",
         );
@@ -287,7 +294,7 @@ mod tests {
             fun_that_returns_int.clone().unwrap(),
             vec![Expr::FunctionExpr(Function {
                 name: String::from("returnsInt"),
-                params: None,
+                params: Some([].to_vec()),
                 return_type: Some(Type::Integer),
                 body: Some(vec![Expr::IntLiteral(12)]),
                 body_expr: Some(Box::new(Expr::ReturnExpr)),
@@ -295,7 +302,3 @@ mod tests {
         )
     }
 }
-
-/*
-var x = 10\nvar y = 5\n{\n    var z = 7\n}\n10 + 10\n10 - 5\n5 * 5\n10 / 2
-*/
